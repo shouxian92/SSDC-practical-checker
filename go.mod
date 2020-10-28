@@ -3,6 +3,6 @@ module github.com/shouxian92/SSDC-practical-checker
 go 1.14
 
 require (
-	github.com/PuerkitoBio/goquery v1.6.0
-	golang.org/x/net v0.0.0-20201026091529-146b70c837a4
+	github.com/j0hnsmith/connspy v0.0.0-20200203145744-79259064872c
+	golang.org/x/net v0.0.0-20201027133719-8eef5233e2a1
 )

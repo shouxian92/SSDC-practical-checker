@@ -5,54 +5,117 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/http/cookiejar"
 	"net/url"
 	"strings"
 
-	"github.com/PuerkitoBio/goquery"
+	"golang.org/x/net/html"
 )
 
 type credentials struct {
-	username string
-	password string
+	Username string `json:"username"`
+	Password string `json:"password"`
 }
 
-// return the http cookie that can be used to make website calls
-func login() (*http.Cookie, error) {
-	dat, err := ioutil.ReadFile("./.credentials")
+const (
+	xsrfTokenName     = "__RequestVerificationToken"
+	sessionCookieName = ".AspNet.ApplicationCookie"
+	sessionIdName     = "ASP.NET_SessionId"
+	domain            = "https://www.ssdcl.com.sg"
+)
 
-	if err != nil {
-		fmt.Printf("unable to read credentials file: %v", err)
+func getXSRFTokens(r http.Response) (string, string) {
+	cookieXSRFToken := ""
+	for _, cookie := range r.Cookies() {
+		if cookie.Name == xsrfTokenName {
+			cookieXSRFToken = cookie.Value
+			break
+		}
 	}
 
-	creds := &credentials{}
-	json.Unmarshal(dat, &creds)
-
-	// Grab the RequestVerificationToken by loading the login page
-	loginURL := "https://www.ssdcl.com.sg/User/Login"
-	r, _ := http.Get(loginURL)
-	d, _ := goquery.NewDocumentFromReader(r.Body)
-	defer r.Body.Close()
-
-	xsrfToken := ""
-	//<input name="__RequestVerificationToken" type="hidden" value="Pl3gJ-33V0P-x_QrfjucRQcuZltUCAFlyYRaUoy0Zpx4n2_2cEOy8W-olYvG-IBnz8QnfRO8jsLJeT_zH-5jfCc91vXpQqkbkXqFZBqLsHo1" />
-	d.Find("input").Each(func(index int, element *goquery.Selection) {
-		if n, exists := element.Attr("name"); exists && n == "__RequestVerificationToken" {
-			xsrfToken, _ = element.Attr("value")
+	formXSRFToken := ""
+	tokenizer := html.NewTokenizer(r.Body)
+	for {
+		tt := tokenizer.Next()
+		if tt == html.ErrorToken {
+			break
 		}
-	})
+		if tt == html.SelfClosingTagToken {
+			token := tokenizer.Token()
+			if token.Data == "input" {
+				isXSRFToken := false
+				for _, attr := range token.Attr {
+					if attr.Key == "name" && attr.Val == xsrfTokenName {
+						isXSRFToken = true
+					}
+				}
 
-	if len(strings.TrimSpace(xsrfToken)) <= 0 {
+				if isXSRFToken {
+					for _, attr := range token.Attr {
+						if attr.Key == "value" {
+							formXSRFToken = attr.Val
+						}
+					}
+				}
+			}
+		}
+	}
+	r.Body.Close()
+
+	if len(strings.TrimSpace(cookieXSRFToken)) <= 0 && len(strings.TrimSpace(formXSRFToken)) <= 0 {
 		panic("XSRF token could not be obtained")
 	}
 
-	// Make actual login
-	formData := url.Values{
-		"__RequestVerificationToken": {xsrfToken},
-		"UserName":                   {creds.username},
-		"Password":                   {creds.password},
+	return cookieXSRFToken, formXSRFToken
+}
+
+func getCredentialsFromFile() credentials {
+	b, err := ioutil.ReadFile(".credentials.json")
+
+	if err != nil {
+		fmt.Printf("unable to read credentials file: %v\n", err)
 	}
 
-	r, _ = http.PostForm("https://www.ssdcl.com.sg/Account/Login", formData)
+	c := credentials{}
+	err = json.Unmarshal(b, &c)
+
+	if err != nil {
+		fmt.Printf("failed to parse file contents: %v\n", err)
+	}
+
+	return c
+}
+
+// return the http auth cookie that can be used to make website calls
+func login() (*http.Cookie, error) {
+	creds := getCredentialsFromFile()
+
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
+	}
+
+	req, _ := http.NewRequest(http.MethodGet, domain+"/User/Login", nil)
+	r, _ := client.Do(req)
+	cookieXSRFToken, formXSRFToken := getXSRFTokens(*r)
+
+	postData := url.Values{}
+	postData.Add("Password", creds.Password)
+	postData.Add("UserName", creds.Username)
+	postData.Add(xsrfTokenName, formXSRFToken)
+
+	req, _ = http.NewRequest(http.MethodPost, domain+"/Account/Login", strings.NewReader(postData.Encode()))
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	req.Header.Set("Cookie", "__RequestVerificationToken="+cookieXSRFToken+";")
+
+	r, _ = client.Do(req)
+	defer r.Body.Close()
+
+	if len(r.Cookies()) <= 0 {
+		panic("no cookies in response")
+	}
+
 	for _, cookie := range r.Cookies() {
 		if cookie.Name == ".AspNet.ApplicationCookie" {
 			return cookie, nil
@@ -63,6 +126,29 @@ func login() (*http.Cookie, error) {
 }
 
 func main() {
+
+	//c, err := login()
+
+	// if err == nil {
+	// 	fmt.Printf("successfully obtained cookie: %v\n", c)
+	// } else {
+	// 	fmt.Printf("failed to get cookie: %v\n", err)
+	// }
+
+	jar, _ := cookiejar.New(nil)
+	var cookies []*http.Cookie
+	cookie := &http.Cookie{
+		Name:   sessionCookieName,
+		Value:  "wv0bmRzIlkV2iahURGdSx5AlAMArYSq3eRX2zLboSJH9fatbmUgex_bqpVzb-pc_0355IbXhx_z76Y7Hia206_RYQ1e1a0UeE-2Iz9JdWTP6S-pXI0_C6Vo3Q3eMgDM3FFS3_ueUa9y_JpSjBB3HkiwwFShK2s9yFRyD9K7uy46g_w6NdiW46TrC3TuXaswjsdZwCQ3A7x22NXwelLTMaE_VJDlF5cMKC8HPaooEMShMqvPvtEcsfQa0pwMpBhBY4bKVBHclzqoGUDHH2AjfNrte4tNXwnuQvn7hbGj6RhLBsI8tAR1wIDlPWqCp3q6-6-cK0GW85bTZHdGlWyrDdqLFgfHrPDsXyLtxUVVupkMq9B-LXhr8QE4q80xEwYwhDrVojMi-qKyjh4CQLvpSKA",
+		Path:   "/",
+		Domain: ".ssdcl.com.sg",
+	}
+	cookies = append(cookies, cookie)
+	u, _ := url.Parse(domain)
+	jar.SetCookies(u, cookies)
+	client := &http.Client{
+		Jar: jar,
+	}
 
 	/*c := time.Tick(1 * time.Minute)
 	for _ = range c {
