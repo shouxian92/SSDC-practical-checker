@@ -46,7 +46,6 @@ type ssdcBookingContext struct {
 	SelectedLocation      string
 	CarModelID            int
 	IsFiRequired          bool
-	checkEligibility      string
 }
 
 type scriptBookingContext struct {

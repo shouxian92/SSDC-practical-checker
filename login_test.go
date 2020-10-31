@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -21,7 +22,11 @@ func TestMain(m *testing.M) {
 	originalContents, _ := ioutil.ReadFile(credentialsTemplateFile)
 	code := m.Run()
 	os.Remove(credentialsFile)
-	ioutil.WriteFile(credentialsTemplateFile, originalContents, 0644)
+	err := ioutil.WriteFile(credentialsTemplateFile, originalContents, 0644)
+	if err != nil {
+		log.Fatalf("test cleanup failed to write back to file: %v", err)
+	}
+
 	os.Exit(code)
 }
 
@@ -36,7 +41,11 @@ func TestReadCredentialsFile_RenamesTemplateToActual(t *testing.T) {
 }
 
 func TestReadCredentialsFile_Successful(t *testing.T) {
-	ioutil.WriteFile(credentialsFile, []byte(fmt.Sprintf(validFileContents, username, password)), 0644)
+	err := ioutil.WriteFile(credentialsFile, []byte(fmt.Sprintf(validFileContents, username, password)), 0644)
+
+	if err != nil {
+		log.Fatalf("test failed to write to file: %v", err)
+	}
 
 	c := getCredentialsFromFile()
 
@@ -45,7 +54,11 @@ func TestReadCredentialsFile_Successful(t *testing.T) {
 }
 
 func TestReadCredentialsFile_InvalidFileReturnsEmptyCredentials(t *testing.T) {
-	ioutil.WriteFile(credentialsFile, []byte(""), 0644)
+	err := ioutil.WriteFile(credentialsFile, []byte(""), 0644)
+	if err != nil {
+		log.Fatalf("test failed to write to file: %v", err)
+	}
+
 	c := getCredentialsFromFile()
 
 	assert.Empty(t, c)
