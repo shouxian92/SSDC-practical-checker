@@ -8,14 +8,14 @@ I can't spend 20 seconds to type my username and password into a website that ex
 
 # Requirements
 
-* Golang (1.14)
+* [Golang](https://golang.org/dl/) (1.14)
 
 # How to use
 
 1. Fill in your username and password in the `.credentials.json` file
 2. Run the script with the following command
 
-```bash
+```properties
 go run main.go
 ```
 
