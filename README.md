@@ -1,3 +1,5 @@
+![build](https://github.com/shouxian92/SSDC-practical-checker/workflows/build/badge.svg)
+
 # Description
 
 Singapore has a ridiculous amount of people who wants to learn driving each day. It is not possible for a single school to accomodate everyone to book their driving lessons. Driving lessons are difficult to book if you want a lesson in the near future (e.g. this week). On average, a person waits at least a month before starting their practical driving lessons.
@@ -6,7 +8,7 @@ I can't spend 20 seconds to type my username and password into a website that ex
 
 # Requirements
 
-1. Go (1.14)
+* Golang (1.14)
 
 # How to use
 
