@@ -3,6 +3,7 @@ module github.com/shouxian92/SSDC-practical-checker
 go 1.14
 
 require (
+	github.com/jarcoal/httpmock v1.0.6
 	github.com/stretchr/testify v1.6.1
 	go.uber.org/multierr v1.6.0 // indirect
 	go.uber.org/zap v1.16.0

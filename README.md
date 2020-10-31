@@ -12,14 +12,15 @@ I can't spend 20 seconds to type my username and password into a website that ex
 
 # How to use
 
-1. Fill in your username and password in the `.credentials.json` file
-2. Run the script with the following command
+1. Fill in your username and password in the `.credentials.template.json` file
+2. Rename it to `.credentials.json`
+3. Run the script with the following command
 
 ```properties
 go run main.go
 ```
 
-3. Script will run at a fixed interval
+4. Script will run at a fixed interval
 
 # Todos
 
