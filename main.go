@@ -18,7 +18,6 @@ func main() {
 	logger.LogInfo("application started")
 
 	c := getAuthCookies()
-
 	if len(c) < 2 {
 		panic("main.go: don't have enough cookies to continue")
 	}

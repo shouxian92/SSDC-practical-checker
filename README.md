@@ -1,4 +1,4 @@
-![Build Status](https://github.com/shouxian92/SSDC-practical-checker/workflows/Go/badge.svg) [![codecov](https://codecov.io/gh/shouxian92/SSDC-practical-checker/branch/main/graph/badge.svg?token=KFWLJRW886)](undefined)
+[![Build Status](https://github.com/shouxian92/SSDC-practical-checker/workflows/Go/badge.svg)](https://github.com/shouxian92/SSDC-practical-checker/actions?query=workflow%3AGo) [![codecov](https://codecov.io/gh/shouxian92/SSDC-practical-checker/branch/main/graph/badge.svg?token=KFWLJRW886)](https://codecov.io/gh/shouxian92/SSDC-practical-checker/)
 
 # Description
 
