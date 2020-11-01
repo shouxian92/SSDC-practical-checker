@@ -78,14 +78,6 @@ func TestBuildAvailableTimeslots_Success(t *testing.T) {
 			expectedDates: []string{"05 Oct 2019 (Sat)"},
 		},
 		{
-			name: "HasMultipleTimeslots",
-			availableTimeslots: []testSessionContext{
-				{SessionID: "123", SessionNumber: "5", Date: "5/10/2019 10:00:00 PM"},
-				{SessionID: "0", SessionNumber: "1", Date: "5/10/2019 10:00:00 PM"},
-			},
-			expectedDates: []string{"05 Oct 2019 (Sat)", "05 Oct 2019 (Sat)"},
-		},
-		{
 			name:               "HasNoTimeslots",
 			availableTimeslots: []testSessionContext{},
 			expectedDates:      []string{},
