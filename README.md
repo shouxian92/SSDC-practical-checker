@@ -1,4 +1,4 @@
-![build](https://github.com/shouxian92/SSDC-practical-checker/workflows/build/badge.svg)
+![Build Status](https://github.com/shouxian92/SSDC-practical-checker/workflows/Go/badge.svg) [![codecov](https://codecov.io/gh/shouxian92/SSDC-practical-checker/branch/main/graph/badge.svg?token=KFWLJRW886)](undefined)
 
 # Description
 
