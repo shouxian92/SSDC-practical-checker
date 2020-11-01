@@ -1,6 +1,4 @@
-[![Build Status](https://github.com/shouxian92/SSDC-practical-checker/workflows/Go/badge.svg)](https://github.com/shouxian92/SSDC-practical-checker/actions?query=workflow%3AGo) [![codecov](https://codecov.io/gh/shouxian92/SSDC-practical-checker/branch/main/graph/badge.svg?token=KFWLJRW886)](https://codecov.io/gh/shouxian92/SSDC-practical-checker/)
-
-# Description
+# SSDC Driving Lesson Checker [![Build Status](https://github.com/shouxian92/SSDC-practical-checker/workflows/Go/badge.svg)](https://github.com/shouxian92/SSDC-practical-checker/actions?query=workflow%3AGo) [![codecov](https://codecov.io/gh/shouxian92/SSDC-practical-checker/branch/main/graph/badge.svg?token=KFWLJRW886)](https://codecov.io/gh/shouxian92/SSDC-practical-checker/)
 
 Singapore has a ridiculous amount of people who wants to learn driving each day. It is not possible for a single school to accomodate everyone to book their driving lessons. Driving lessons are difficult to book if you want a lesson in the near future (e.g. this week). On average, a person waits at least a month before starting their practical driving lessons.
 
