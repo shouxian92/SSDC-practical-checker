@@ -18,50 +18,71 @@ const (
 	validFileContents = "{\"username\": \"%s\", \"password\":\"%s\"}"
 )
 
-func TestMain(m *testing.M) {
-	originalContents, _ := ioutil.ReadFile(credentialsTemplateFile)
-	code := m.Run()
-	os.Remove(credentialsFile)
-	err := ioutil.WriteFile(credentialsTemplateFile, originalContents, 0644)
+func TestReadCredentialsFromFile(t *testing.T) {
+	originalTemplateContents, _ := ioutil.ReadFile(credentialsTemplateFile)
+
+	// if original credentials file exists, back it up as well
+	_, err := os.Stat(credentialsFile)
+	hasCredentialsFile := !os.IsNotExist(err)
+	originalCredContents := []byte{}
+	if hasCredentialsFile {
+		originalCredContents, _ = ioutil.ReadFile(credentialsFile)
+		err = os.Remove(credentialsFile)
+		if err != nil {
+			log.Fatalf("setup failed to remove credentials file: %v", err)
+		}
+	}
+
+	t.Run("RenamesTemplateToActual", func(t *testing.T) {
+		getCredentialsFromFile()
+
+		_, err := os.Stat(credentialsTemplateFile)
+		assert.True(t, os.IsNotExist(err))
+
+		_, err = os.Stat(credentialsFile)
+		assert.Nil(t, err)
+	})
+
+	t.Run("SuccessfullyRead", func(t *testing.T) {
+		err := ioutil.WriteFile(credentialsFile, []byte(fmt.Sprintf(validFileContents, username, password)), 0644)
+
+		if err != nil {
+			log.Fatalf("test failed to write to file: %v", err)
+		}
+
+		c := getCredentialsFromFile()
+
+		assert.Equal(t, c.Username, username)
+		assert.Equal(t, c.Password, password)
+	})
+
+	t.Run("EmptyFileReturnsEmptyCredentials", func(t *testing.T) {
+		err := ioutil.WriteFile(credentialsFile, []byte(""), 0644)
+		if err != nil {
+			log.Fatalf("test failed to write to file: %v", err)
+		}
+
+		c := getCredentialsFromFile()
+
+		assert.Empty(t, c)
+	})
+
+	if hasCredentialsFile {
+		err := ioutil.WriteFile(credentialsFile, originalCredContents, 0644)
+		if err != nil {
+			log.Fatalf("test cleanup failed to write back to file: %v", err)
+		}
+	} else {
+		err := os.Remove(credentialsFile)
+		if err != nil {
+			log.Fatalf("cleanup failed to remove credentials file: %v", err)
+		}
+	}
+
+	err = ioutil.WriteFile(credentialsTemplateFile, originalTemplateContents, 0644)
 	if err != nil {
 		log.Fatalf("test cleanup failed to write back to file: %v", err)
 	}
-
-	os.Exit(code)
-}
-
-func TestReadCredentialsFile_RenamesTemplateToActual(t *testing.T) {
-	getCredentialsFromFile()
-
-	_, err := os.Stat(credentialsTemplateFile)
-	assert.True(t, os.IsNotExist(err))
-
-	_, err = os.Stat(credentialsFile)
-	assert.Nil(t, err)
-}
-
-func TestReadCredentialsFile_Successful(t *testing.T) {
-	err := ioutil.WriteFile(credentialsFile, []byte(fmt.Sprintf(validFileContents, username, password)), 0644)
-
-	if err != nil {
-		log.Fatalf("test failed to write to file: %v", err)
-	}
-
-	c := getCredentialsFromFile()
-
-	assert.Equal(t, c.Username, username)
-	assert.Equal(t, c.Password, password)
-}
-
-func TestReadCredentialsFile_InvalidFileReturnsEmptyCredentials(t *testing.T) {
-	err := ioutil.WriteFile(credentialsFile, []byte(""), 0644)
-	if err != nil {
-		log.Fatalf("test failed to write to file: %v", err)
-	}
-
-	c := getCredentialsFromFile()
-
-	assert.Empty(t, c)
 }
 
 func TestGetAuthCookies_Successful(t *testing.T) {

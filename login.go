@@ -81,7 +81,7 @@ func getAuthCookies() []*http.Cookie {
 
 	r, err := client.Do(req)
 
-	if err != nil {
+	if err == nil {
 		defer r.Body.Close()
 	}
 

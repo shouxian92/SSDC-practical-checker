@@ -84,8 +84,8 @@ func buildAvailableTimeslots(r *http.Response) []timeslot {
 	for id := range timeslotSet {
 		sessionContext := strings.Split(id, "_")
 
-		if len(sessionContext) > 5 {
-			logger.LogWarn("not a valid timeslot, the session ID did not contain 3 items: %v", id)
+		if len(sessionContext) < 3 {
+			logger.LogWarn("not a valid timeslot, the session ID contains less than 3 items: %v", id)
 		}
 
 		// the date format of the element is not according to any RFC format
@@ -139,7 +139,7 @@ func getAvailableTimeslots(ctx scriptBookingContext) string {
 	return newXSRFToken
 }
 
-// makes a GET call to return the very first XSRF token
+// makes a GET call to /AddBooking return the very first XSRF token
 func initiateBookingFlow(client *http.Client) string {
 	req, _ := http.NewRequest(http.MethodGet, domain+"/User/Booking/AddBooking?bookingType=PL", nil)
 	resp, err := client.Do(req)
@@ -158,16 +158,6 @@ func buildFormData(ctx ssdcBookingContext) url.Values {
 	d.Add("SlotId", strconv.Itoa(ctx.SlotID))
 	d.Add("SelectedSessionNumber", strconv.Itoa(ctx.SelectedSessionNumber))
 	d.Add("SelectedDate", ctx.SelectedDate.Format("02 Jan 2006"))
-
-	// allow some level of context checking later
-	//d.Add("SellBundleId", ctx.SellBundleID)
-	//d.Add("IsOrientation", strings.Title(strconv.FormatBool(ctx.IsOrientation)))
-	//d.Add("BookingType", ctx.BookingType)
-	//d.Add("SelectedSessionType", ctx.SelectedSessionType)
-	//d.Add("SelectedLocation", ctx.SelectedLocation)
-	//d.Add("CarModelId", strconv.Itoa(ctx.CarModelID))
-	//d.Add("IsFiRequired", strings.Title(strconv.FormatBool(ctx.IsFiRequired)))
-	//d.Add("checkEligibility", ctx.checkEligibility)
 
 	// defaults
 	d.Add("SellBundleId", "00000000-0000-0000-0000-000000000000")
