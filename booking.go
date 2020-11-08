@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/shouxian92/SSDC-practical-checker/logger"
+	"github.com/shouxian92/SSDC-practical-checker/structures"
 	"go.uber.org/zap"
 	"golang.org/x/net/html"
 )
@@ -25,13 +26,6 @@ var (
 		"6": "08:20PM",
 	}
 )
-
-// a struct to hold data for representing the available timeslots
-type timeslot struct {
-	SessionID string
-	StartTime string
-	Date      string
-}
 
 // context that belongs to the website
 type ssdcBookingContext struct {
@@ -55,10 +49,10 @@ type scriptBookingContext struct {
 	Logger    *zap.SugaredLogger
 }
 
-func buildAvailableTimeslots(r *http.Response) []timeslot {
+func buildAvailableTimeslots(r *http.Response) []structures.Timeslot {
 	rc := ioutil.NopCloser(bytes.NewBuffer(bodyToBytes(r)))
 	tokenizer := html.NewTokenizer(rc)
-	availableTimeslots := []timeslot{}
+	availableTimeslots := []structures.Timeslot{}
 
 	timeslotSet := make(map[string]bool)
 	for {
@@ -98,7 +92,7 @@ func buildAvailableTimeslots(r *http.Response) []timeslot {
 			continue
 		}
 
-		ts := &timeslot{
+		ts := &structures.Timeslot{
 			SessionID: sessionContext[0],
 			StartTime: sessionNumberToStartTime[sessionContext[1]],
 			Date:      date.Format("02 Jan 2006 (Mon)"),
