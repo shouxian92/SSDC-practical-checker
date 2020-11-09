@@ -19,28 +19,40 @@ func NewInstance() {
 	}
 }
 
-// LogInfo logs the input on the logger's info level
-func LogInfo(msg string, params ...interface{}) {
+// Info logs the input on the logger's info level
+func Info(msg string, params ...interface{}) {
 	if logger == nil {
 		return
+	}
+
+	if len(params) <= 0 {
+		logger.Info(msg)
 	}
 
 	logger.Infof(msg, params)
 }
 
-// LogError logs the input on the logger's error level
-func LogError(msg string, params ...interface{}) {
+// Error logs the input on the logger's error level
+func Error(msg string, params ...interface{}) {
 	if logger == nil {
 		return
+	}
+
+	if len(params) <= 0 {
+		logger.Error(msg)
 	}
 
 	logger.Errorf(msg, params)
 }
 
-// LogWarn logs the input on the logger's warn level
-func LogWarn(msg string, params ...interface{}) {
+// Warn logs the input on the logger's warn level
+func Warn(msg string, params ...interface{}) {
 	if logger == nil {
 		return
+	}
+
+	if len(params) <= 0 {
+		logger.Warn(msg)
 	}
 
 	logger.Warnf(msg, params)

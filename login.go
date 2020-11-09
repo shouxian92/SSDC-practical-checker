@@ -21,6 +21,23 @@ type credentials struct {
 	Password string `json:"password"`
 }
 
+func getCredentials() credentials {
+	c := getCredentialsFromEnvVar()
+
+	if len(c.Username) > 0 && len(c.Password) > 0 {
+		return c
+	}
+
+	return getCredentialsFromFile()
+}
+
+func getCredentialsFromEnvVar() credentials {
+	return credentials{
+		Username: os.Getenv("SSDC_USERNAME"),
+		Password: os.Getenv("SSDC_PASSWORD"),
+	}
+}
+
 func getCredentialsFromFile() credentials {
 	c := credentials{}
 
@@ -29,25 +46,25 @@ func getCredentialsFromFile() credentials {
 		renameErr := os.Rename(credentialsTemplateFile, credentialsFile)
 
 		if renameErr != nil {
-			logger.LogError("failed to rename template file: %v", err)
+			logger.Error("failed to rename template file: %v", err)
 		}
 	}
 
 	b, err := ioutil.ReadFile(credentialsFile)
 
 	if err != nil {
-		logger.LogError("unable to read credentials file: %v\n", err)
+		logger.Error("unable to read credentials file: %v\n", err)
 		return c
 	}
 
 	err = json.Unmarshal(b, &c)
 
 	if err != nil {
-		logger.LogError("failed to parse file contents: %v\n", err)
+		logger.Error("failed to parse file contents: %v\n", err)
 	}
 
 	if len(c.Username) == 0 || len(c.Password) == 0 {
-		logger.LogError("username or password is empty in credentials file.")
+		logger.Error("username or password is empty in credentials file.")
 	}
 
 	return c
@@ -55,7 +72,7 @@ func getCredentialsFromFile() credentials {
 
 // return the http auth cookie and XSRF token cookie that can be used to make website calls
 func getAuthCookies() []*http.Cookie {
-	creds := getCredentialsFromFile()
+	creds := getCredentials()
 	cookies := []*http.Cookie{}
 
 	client := &http.Client{

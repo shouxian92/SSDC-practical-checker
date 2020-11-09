@@ -10,18 +10,18 @@ import (
 )
 
 const (
-	pollInterval = 1 * time.Minute
+	pollInterval = 1 * time.Hour
 )
 
 func main() {
 	logger.NewInstance()
-	logger.LogInfo("application started")
+	logger.Info("application started")
 
 	c := getAuthCookies()
 	if len(c) < 2 {
 		panic("main.go: don't have enough cookies to continue")
 	}
-	logger.LogInfo("auth cookies obtained successfully: %v", c)
+	logger.Info("auth cookies obtained successfully: %v", c)
 
 	jar, _ := cookiejar.New(nil)
 	u, _ := url.Parse(domain)
@@ -43,6 +43,12 @@ func main() {
 		XSRFToken: formToken,
 	}
 
+	if len(formToken) <= 0 {
+		formToken = initiateBookingFlow(client)
+	}
+	ctx.StartDate = time.Now()
+	ctx.XSRFToken = formToken
+	formToken = getAvailableTimeslots(*ctx)
 	for range time.Tick(pollInterval) {
 		if len(formToken) <= 0 {
 			formToken = initiateBookingFlow(client)
@@ -52,5 +58,5 @@ func main() {
 		formToken = getAvailableTimeslots(*ctx)
 	}
 
-	logger.LogInfo("application exiting")
+	logger.Info("application exiting")
 }

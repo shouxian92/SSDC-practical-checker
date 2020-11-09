@@ -5,11 +5,13 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/shouxian92/SSDC-practical-checker/logger"
+	"github.com/shouxian92/SSDC-practical-checker/notifications"
 	"github.com/shouxian92/SSDC-practical-checker/structures"
 	"go.uber.org/zap"
 	"golang.org/x/net/html"
@@ -79,7 +81,7 @@ func buildAvailableTimeslots(r *http.Response) []structures.Timeslot {
 		sessionContext := strings.Split(id, "_")
 
 		if len(sessionContext) < 3 {
-			logger.LogWarn("not a valid timeslot, the session ID contains less than 3 items: %v", id)
+			logger.Warn("not a valid timeslot, the session ID contains less than 3 items: %v", id)
 		}
 
 		// the date format of the element is not according to any RFC format
@@ -88,7 +90,7 @@ func buildAvailableTimeslots(r *http.Response) []structures.Timeslot {
 		date, err := time.Parse("2/01/2006 15:04:05", dateStr)
 
 		if err != nil {
-			logger.LogWarn("failed to parse timestamp. timestamp was %v. error: %v\n", sessionContext[2], err)
+			logger.Warn("failed to parse timestamp. timestamp was %v. error: %v\n", sessionContext[2], err)
 			continue
 		}
 
@@ -119,8 +121,13 @@ func getAvailableTimeslots(ctx scriptBookingContext) string {
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	resp, err := ctx.Client.Do(req)
 
-	if err != nil || resp.StatusCode == http.StatusFound {
-		logger.LogError("error making request (resp code: %v): %v", resp.StatusCode, err)
+	if err != nil {
+		logger.Error("an error occured when making the request: %v", err)
+		return ""
+	}
+
+	if resp.StatusCode == http.StatusFound {
+		logger.Error("error making request (resp code: %v): %v", resp.StatusCode, resp.Body)
 		return ""
 	}
 
@@ -128,7 +135,14 @@ func getAvailableTimeslots(ctx scriptBookingContext) string {
 	newXSRFToken := getXSRFForm(resp)
 	availableTimeslots := buildAvailableTimeslots(resp)
 
-	logger.LogInfo("available timeslots: %v", availableTimeslots)
+	ec := notifications.EmailContext{
+		To:        os.Args[1],
+		Timeslots: availableTimeslots,
+	}
+	logger.Info("sending an email to %v", os.Args[1])
+	notifications.SendEmail(ec)
+
+	logger.Info("available timeslots: %v", availableTimeslots)
 
 	return newXSRFToken
 }
@@ -138,11 +152,11 @@ func initiateBookingFlow(client *http.Client) string {
 	req, _ := http.NewRequest(http.MethodGet, domain+"/User/Booking/AddBooking?bookingType=PL", nil)
 	resp, err := client.Do(req)
 	if err != nil {
-		logger.LogError("error navigating to booking page: %v", err)
+		logger.Error("error navigating to booking page: %v", err)
 	}
 	formToken := getXSRFForm(resp)
 	resp.Body.Close()
-	logger.LogInfo("GET /AddBooking completed successfully. XSRF token: %v\n", formToken)
+	logger.Info("GET /AddBooking completed successfully. XSRF token: %v\n", formToken)
 	return formToken
 }
 
