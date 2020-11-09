@@ -136,7 +136,7 @@ func getAvailableTimeslots(ctx scriptBookingContext) string {
 	availableTimeslots := buildAvailableTimeslots(resp)
 
 	ec := notifications.EmailContext{
-		To:        os.Args[1],
+		To:        os.Getenv("TO_EMAIL_ADDRESS"),
 		Timeslots: availableTimeslots,
 	}
 	logger.Info("sending an email to %v", os.Args[1])
