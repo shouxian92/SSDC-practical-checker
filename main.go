@@ -43,13 +43,13 @@ func main() {
 		XSRFToken: formToken,
 	}
 
-	if len(formToken) <= 0 {
-		formToken = initiateBookingFlow(client)
-	}
-	ctx.StartDate = time.Now()
-	ctx.XSRFToken = formToken
-	formToken = getAvailableTimeslots(*ctx)
-	for range time.Tick(pollInterval) {
+	for tick := range time.Tick(pollInterval) {
+		hours, _, _ := tick.Clock()
+
+		if hours > 23 && hours < 7 {
+			continue
+		}
+
 		if len(formToken) <= 0 {
 			formToken = initiateBookingFlow(client)
 		}
