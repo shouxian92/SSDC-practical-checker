@@ -135,11 +135,12 @@ func getAvailableTimeslots(ctx scriptBookingContext) string {
 	newXSRFToken := getXSRFForm(resp)
 	availableTimeslots := buildAvailableTimeslots(resp)
 
+	recipient := os.Getenv("TO_EMAIL_ADDRESS")
 	ec := notifications.EmailContext{
-		To:        os.Getenv("TO_EMAIL_ADDRESS"),
+		To:        recipient,
 		Timeslots: availableTimeslots,
 	}
-	logger.Info("sending an email to %v", os.Args[1])
+	logger.Info("sending an email to %v", recipient)
 	notifications.SendEmail(ec)
 
 	logger.Info("available timeslots: %v", availableTimeslots)
