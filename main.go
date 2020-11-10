@@ -6,6 +6,7 @@ import (
 	"net/url"
 	"time"
 	"os"
+	"log"
 
 	"github.com/shouxian92/SSDC-practical-checker/logger"
 )
