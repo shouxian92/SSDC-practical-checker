@@ -6,16 +6,18 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/shouxian92/SSDC-practical-checker/logger"
 )
 
-const (
+var (
 	pollInterval = 30 * time.Minute
 )
 
 func main() {
+	go bindToHerokuPort()
 	logger.NewInstance()
 	logger.Info("application started")
 
@@ -45,15 +47,12 @@ func main() {
 		XSRFToken: formToken,
 	}
 
-	// heroku things, we have to bind to the port or the binary gets the exit signal code
-	go func() {
-		port := os.Getenv("PORT")
-
-		if len(port) == 0 {
-			port = "80"
+	if im, ok := os.LookupEnv("INTERVAL_MINUTES"); ok {
+		m, err := strconv.Atoi(im)
+		if err == nil {
+			pollInterval = time.Duration(m) * time.Minute
 		}
-		log.Fatal(http.ListenAndServe(":"+port, nil))
-	}()
+	}
 
 	for tick := range time.Tick(pollInterval) {
 		hours, _, _ := tick.Clock()
@@ -71,4 +70,13 @@ func main() {
 	}
 
 	logger.Info("application exiting")
+}
+
+func bindToHerokuPort() {
+	port := os.Getenv("PORT")
+
+	if len(port) == 0 {
+		port = "80"
+	}
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
