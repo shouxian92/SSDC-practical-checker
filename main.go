@@ -1,6 +1,7 @@
 package main
 
 import (
+	"log"
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
@@ -10,7 +11,7 @@ import (
 )
 
 const (
-	pollInterval = 1 * time.Hour
+	pollInterval = 30 * time.Minute
 )
 
 func main() {
@@ -45,10 +46,10 @@ func main() {
 
 	for tick := range time.Tick(pollInterval) {
 		hours, _, _ := tick.Clock()
-
-		if hours > 23 && hours < 7 {
-			continue
-		}
+		log.Printf("current hours is: %v\n", hours)
+		// if hours > 15 || hours < 23 {
+		// 	continue
+		// }
 
 		if len(formToken) <= 0 {
 			formToken = initiateBookingFlow(client)
