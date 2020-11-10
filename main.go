@@ -5,6 +5,7 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"time"
+	"os"
 
 	"github.com/shouxian92/SSDC-practical-checker/logger"
 )
