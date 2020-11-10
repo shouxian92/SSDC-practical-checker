@@ -42,15 +42,16 @@ func main() {
 		Client:    client,
 		XSRFToken: formToken,
 	}
-
 	
+	// heroku things, we have to bind to the port or the binary gets the exit signal code
+	go func() {
+		port := os.Getenv("PORT")
 
-	if len(formToken) <= 0 {
-		formToken = initiateBookingFlow(client)
-	}
-	ctx.StartDate = time.Now()
-	ctx.XSRFToken = formToken
-	formToken = getAvailableTimeslots(*ctx)
+		if len(port) == 0 {
+			port = "80"
+		}
+		log.Fatal(http.ListenAndServe(":"+port, nil))
+	}()
 	
 	for tick := range time.Tick(pollInterval) {
 		hours, _, _ := tick.Clock()
