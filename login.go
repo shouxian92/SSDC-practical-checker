@@ -8,7 +8,6 @@ import (
 	"os"
 	"strings"
 
-	retryablehttp "github.com/hashicorp/go-retryablehttp"
 	"go.uber.org/zap"
 )
 
@@ -76,13 +75,13 @@ func getAuthCookies() []*http.Cookie {
 	creds := getCredentials()
 	cookies := []*http.Cookie{}
 
-	client := retryablehttp.NewClient()
-	// Cookie is set in the redirect call, so don't execute the redirect first
-	client.HTTPClient.CheckRedirect = func(req *http.Request, via []*http.Request) error {
-		return http.ErrUseLastResponse
+	client := &http.Client{
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			return http.ErrUseLastResponse
+		},
 	}
 
-	req, _ := retryablehttp.NewRequest(http.MethodGet, domain+"/User/Login", nil)
+	req, _ := http.NewRequest(http.MethodGet, domain+"/User/Login", nil)
 	r, _ := client.Do(req)
 	cookieXSRFToken, formXSRFToken := getTokens(r)
 	cookies = append(cookies, cookieXSRFToken)
@@ -93,7 +92,7 @@ func getAuthCookies() []*http.Cookie {
 		xsrfTokenName: {formXSRFToken},
 	}
 
-	req, _ = retryablehttp.NewRequest(http.MethodPost, domain+"/Account/Login", strings.NewReader(postData.Encode()))
+	req, _ = http.NewRequest(http.MethodPost, domain+"/Account/Login", strings.NewReader(postData.Encode()))
 	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
 	req.AddCookie(cookieXSRFToken)
 
