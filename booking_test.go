@@ -8,7 +8,6 @@ import (
 
 	"github.com/jarcoal/httpmock"
 	"github.com/stretchr/testify/assert"
-	"go.uber.org/zap"
 )
 
 type testSessionContext struct {
@@ -56,7 +55,6 @@ func TestGetAvailableTimeslots(t *testing.T) {
 				StartDate: time.Now(),
 				Client:    &http.Client{},
 				XSRFToken: "",
-				Logger:    &zap.SugaredLogger{},
 			}
 			resultingXSRF := getAvailableTimeslots(*ctx)
 			assert.Equal(t, "anotherXSRF", resultingXSRF)

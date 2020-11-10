@@ -6,8 +6,8 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/shouxian92/SSDC-practical-checker/logger"
 	"github.com/shouxian92/SSDC-practical-checker/structures"
+	"go.uber.org/zap"
 )
 
 // EmailContext is used to pass information to generate the required payload for sending the email
@@ -29,6 +29,8 @@ func SendEmail(ctx EmailContext) {
 		return
 	}
 
+	zap.S().Infof("sending an email to %v", ctx.To)
+
 	b, _ := json.Marshal(&sendRequest{
 		Type:     "driving",
 		To:       ctx.To,
@@ -39,19 +41,19 @@ func SendEmail(ctx EmailContext) {
 	resp, err := http.Post(os.Getenv("EMAIL_SERVER")+"/send", "application/json", bytes.NewBuffer(b))
 
 	if err != nil {
-		logger.Error("there was an error making the email request: %v", err)
+		zap.S().Errorf("there was an error making the email request: %v", err)
 		return
 	}
 
 	switch resp.StatusCode {
 	case http.StatusNoContent:
-		logger.Info("email sent successfully")
+		zap.S().Info("email sent successfully")
 		break
 	case http.StatusBadRequest:
-		logger.Info("bad request: %v", resp.Body)
+		zap.S().Infof("bad request: %v", resp.Body)
 		break
 	default:
-		logger.Info("unexpected error happened: (%v) %v", resp.StatusCode, resp.Body)
+		zap.S().Infof("unexpected error happened: (%v) %v", resp.StatusCode, resp.Body)
 		break
 	}
 

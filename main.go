@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/shouxian92/SSDC-practical-checker/logger"
+	"go.uber.org/zap"
 )
 
 var (
@@ -18,65 +18,79 @@ var (
 
 func main() {
 	go bindToHerokuPort()
-	logger.NewInstance()
-	logger.Info("application started")
+	initLogger()
+	defer zap.L().Sync()
 
-	c := getAuthCookies()
-	if len(c) < 2 {
-		panic("main.go: don't have enough cookies to continue")
-	}
-	logger.Info("auth cookies obtained successfully: %v", c)
+	zap.S().Info("application started")
 
-	jar, _ := cookiejar.New(nil)
-	u, _ := url.Parse(domain)
-	jar.SetCookies(u, c)
-
-	client := &http.Client{
-		Jar: jar,
-		CheckRedirect: func(req *http.Request, via []*http.Request) error {
-			// this can happen when our auth cookie expires, get new set of auth cookies
-			c = getAuthCookies()
-			jar.SetCookies(u, c)
-			return http.ErrUseLastResponse
-		},
-	}
-
-	formToken := ""
+	client := initHTTPClient()
 	ctx := &scriptBookingContext{
 		Client:    client,
-		XSRFToken: formToken,
+		XSRFToken: "",
 	}
 
 	if im, ok := os.LookupEnv("INTERVAL_MINUTES"); ok {
 		m, err := strconv.Atoi(im)
-		if err == nil {
+		if err == nil && m > 0 {
+			zap.S().Infof("setting poll interval to %v minutes", m)
 			pollInterval = time.Duration(m) * time.Minute
 		}
 	}
 
 	for tick := range time.Tick(pollInterval) {
-		hours, _, _ := tick.Clock()
-		logger.Info("current hours is: %v\n", hours)
-		// if hours > 15 || hours < 23 {
-		// 	continue
-		// }
+		zap.S().Info("starting clock interval")
+		hours, _, _ := tick.UTC().Clock()
+		if hours > 15 && hours < 23 {
+			zap.S().Info("not going to run at this interval since it is sleepy time")
+			continue
+		}
 
-		if len(formToken) <= 0 {
-			formToken = initiateBookingFlow(client)
+		if len(ctx.XSRFToken) <= 0 {
+			ctx.XSRFToken = initiateBookingFlow(client)
 		}
 		ctx.StartDate = time.Now()
-		ctx.XSRFToken = formToken
-		formToken = getAvailableTimeslots(*ctx)
+		ctx.XSRFToken = getAvailableTimeslots(*ctx)
 	}
 
-	logger.Info("application exiting")
+	zap.S().Info("application exiting")
+}
+
+func initLogger() {
+	logger, err := zap.NewProduction()
+	zap.ReplaceGlobals(logger)
+	if err != nil {
+		panic("failed to init logger: " + err.Error())
+	}
+}
+
+func initHTTPClient() *http.Client {
+	zap.S().Info("initializing http client")
+	jar, _ := cookiejar.New(nil)
+	u, _ := url.Parse(domain)
+
+	return &http.Client{
+		Jar: jar,
+		CheckRedirect: func(req *http.Request, via []*http.Request) error {
+			c := getAuthCookies()
+
+			if len(c) < 2 {
+				zap.S().Error("don't have enough cookies to continue")
+				return nil
+			}
+
+			zap.S().Infof("auth cookies obtained successfully: %v", c)
+			jar.SetCookies(u, c)
+			return nil
+		},
+	}
 }
 
 func bindToHerokuPort() {
 	port := os.Getenv("PORT")
 
 	if len(port) == 0 {
-		port = "80"
+		return
 	}
+
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }

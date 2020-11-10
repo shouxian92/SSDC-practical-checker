@@ -4,10 +4,10 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"strings"
 
+	"go.uber.org/zap"
 	"golang.org/x/net/html"
 )
 
@@ -54,7 +54,7 @@ func getXSRFForm(r *http.Response) string {
 	}
 
 	if len(formXSRFToken) <= 0 {
-		log.Println("unable to obtain XSRF token from hidden input")
+		zap.S().Error("unable to obtain XSRF token from hidden input")
 	}
 
 	return formXSRFToken
