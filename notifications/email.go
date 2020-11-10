@@ -48,13 +48,10 @@ func SendEmail(ctx EmailContext) {
 	switch resp.StatusCode {
 	case http.StatusNoContent:
 		zap.S().Info("email sent successfully")
-		break
 	case http.StatusBadRequest:
 		zap.S().Infof("bad request: %v", resp.Body)
-		break
 	default:
 		zap.S().Infof("unexpected error happened: (%v) %v", resp.StatusCode, resp.Body)
-		break
 	}
 
 	defer resp.Body.Close()

@@ -19,7 +19,6 @@ var (
 func main() {
 	go bindToHerokuPort()
 	initLogger()
-	defer zap.L().Sync()
 
 	zap.S().Info("application started")
 
@@ -53,6 +52,11 @@ func main() {
 	}
 
 	zap.S().Info("application exiting")
+	err := zap.L().Sync()
+
+	if err != nil {
+		log.Fatalf("unable to flush zap logger: %v", err)
+	}
 }
 
 func initLogger() {
