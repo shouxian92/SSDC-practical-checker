@@ -5,9 +5,8 @@ import (
 	"net/http"
 	"net/http/cookiejar"
 	"net/url"
-	"time"
 	"os"
-	"log"
+	"time"
 
 	"github.com/shouxian92/SSDC-practical-checker/logger"
 )
@@ -45,7 +44,7 @@ func main() {
 		Client:    client,
 		XSRFToken: formToken,
 	}
-	
+
 	// heroku things, we have to bind to the port or the binary gets the exit signal code
 	go func() {
 		port := os.Getenv("PORT")
@@ -55,10 +54,10 @@ func main() {
 		}
 		log.Fatal(http.ListenAndServe(":"+port, nil))
 	}()
-	
+
 	for tick := range time.Tick(pollInterval) {
 		hours, _, _ := tick.Clock()
-		log.Printf("current hours is: %v\n", hours)
+		logger.Info("current hours is: %v\n", hours)
 		// if hours > 15 || hours < 23 {
 		// 	continue
 		// }
