@@ -17,7 +17,7 @@ var (
 )
 
 func main() {
-	go bindToHerokuPort()
+	go initHeroku()
 	initLogger()
 
 	zap.S().Info("application started")
@@ -89,12 +89,16 @@ func initHTTPClient() *http.Client {
 	}
 }
 
-func bindToHerokuPort() {
+func initHeroku() {
 	port := os.Getenv("PORT")
 
 	if len(port) == 0 {
 		return
 	}
+
+	http.HandleFunc("/health", func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusNoContent)
+	})
 
 	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
